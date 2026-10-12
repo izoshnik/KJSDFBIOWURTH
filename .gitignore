@@ -1,0 +1,17 @@
+# Секреты и сессии Telegram — никогда не загружать в GitHub
+*.session
+*.session-journal
+config.json
+*.sqlite3
+*.sqlite3-*
+*.log
+app.lock
+
+__pycache__/
+*.pyc
+.venv/
+venv/
+build/
+dist/
+*.spec
+.pytest_cache/
