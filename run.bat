@@ -1,19 +1,39 @@
 @echo off
-chcp 65001 >nul
+setlocal
 cd /d "%~dp0"
-if not exist .venv (
-    echo Создание виртуального окружения...
-    py -3.11 -m venv .venv || py -3 -m venv .venv || goto :nopython
-    .venv\Scripts\python -m pip install --upgrade pip
-    .venv\Scripts\python -m pip install -r requirements.txt || goto :fail
+
+set "PY="
+where py >nul 2>nul && set "PY=py -3"
+if not defined PY (where python >nul 2>nul && set "PY=python")
+if not defined PY goto nopython
+
+if not exist ".venv\Scripts\python.exe" (
+    echo Creating virtual environment...
+    %PY% -m venv .venv
+    if errorlevel 1 goto fail
 )
-start "" .venv\Scripts\pythonw main.py
+
+".venv\Scripts\python.exe" -c "import telethon" >nul 2>nul
+if errorlevel 1 (
+    echo Installing dependencies, please wait...
+    ".venv\Scripts\python.exe" -m pip install --upgrade pip
+    ".venv\Scripts\python.exe" -m pip install -r requirements.txt
+    if errorlevel 1 goto fail
+    rem Pillow is optional: it only enables photo previews
+    ".venv\Scripts\python.exe" -m pip install --only-binary=:all: Pillow
+)
+
+start "" ".venv\Scripts\pythonw.exe" main.py
 exit /b 0
+
 :nopython
-echo Не найден Python 3.11+. Установите его с https://www.python.org/downloads/ (отметьте "Add to PATH").
+echo Python not found. Install Python 3.11 - 3.13 from https://www.python.org/downloads/
+echo and enable "Add python.exe to PATH".
 pause
 exit /b 1
+
 :fail
-echo Не удалось установить зависимости. Проверьте подключение к интернету.
+echo ERROR: setup failed. Check the messages above and your internet connection.
+echo You can delete the .venv folder and run this file again.
 pause
 exit /b 1
